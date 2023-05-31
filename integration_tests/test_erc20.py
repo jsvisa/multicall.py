@@ -11,8 +11,12 @@ class TestErc20:
     mc = Multicall(os.environ["ETHEREUM_PROVIDER_URI"])
 
     def test_get_balance(self):
-
-        excepted = [{"request_id": self.token_address, "result": 6266076220000000000}]
+        excepted = [
+            {
+                "request_id": self.token_address,
+                "result": 6266076220000000000,
+            }
+        ]
 
         call = self.erc20_service.balanceOf(
             token=self.token_address,
