@@ -5,12 +5,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 setup(
-    name="multicall",
-    version="1.0.0",
+    name="multicall-py",
+    version="1.1.0",
     description="Ethereum multiple contract/rpc calls",
     long_description=open(os.path.join(here, "README.md")).read(),
+    long_description_content_type="text/markdown",
     classifiers=[
-        # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -36,7 +36,7 @@ setup(
     include_package_data=True,
     python_requires=">=3.6",
     install_requires=[
-        "web3",
+        "eth-abi==2.1.1",
         "requests",
     ],
 )

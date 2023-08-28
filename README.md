@@ -5,7 +5,7 @@ fork from https://github.com/banteg/multicall.py, but implements the multicall i
 ## Install
 
 ```bash
-pip[env] install git+https://github.com/jsvisa/multicall.py.git#egg=multicall
+pip install multicall-py
 ```
 
 ## Example
