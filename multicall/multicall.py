@@ -1,15 +1,26 @@
+import json
 import logging
 import concurrent.futures
 import requests.adapters
 from urllib3.util.retry import Retry
 from requests import Session
-from typing import List, Dict, Union, Optional, Generator, Iterable
+from typing import List, Dict, Union, Optional, Generator, Iterable, Any
 from collections.abc import Sequence
 
 from eth_utils.conversions import to_text
-from web3._utils.encoding import FriendlyJsonSerde
 
 from .call import Call
+
+
+def json_decode(json_str: str) -> Dict[Any, Any]:
+    try:
+        decoded = json.loads(json_str)
+        return decoded
+    except json.decoder.JSONDecodeError as exc:
+        err_msg = f"Could not decode {json_str!r} because of {exc}."
+        # Calling code may rely on catching JSONDecodeError to recognize bad json
+        # so we have to re-raise the same type.
+        raise json.decoder.JSONDecodeError(err_msg, exc.doc, exc.pos)
 
 
 class Multicall:
@@ -111,7 +122,7 @@ class Multicall:
             raw_response,
         )
         text_response = to_text(text=raw_response.text)
-        responses = FriendlyJsonSerde().json_decode(text_response)
+        responses = json_decode(text_response)
         if len(requests) > 1:
             return responses  # type: ignore
         else:

@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-web3 = "*"
 requests = "*"
 eth-abi = "==2.1.1"
 
