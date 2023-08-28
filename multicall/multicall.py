@@ -1,6 +1,6 @@
 import json
 import logging
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests.adapters
 from urllib3.util.retry import Retry
 from requests import Session
@@ -18,8 +18,8 @@ def json_decode(json_str: str) -> Dict[Any, Any]:
         return decoded
     except json.decoder.JSONDecodeError as exc:
         err_msg = f"Could not decode {json_str!r} because of {exc}."
-        # Calling code may rely on catching JSONDecodeError to recognize bad json
-        # so we have to re-raise the same type.
+        # Calling code may rely on catching JSONDecodeError to
+        # recognize bad json so we have to re-raise the same type.
         raise json.decoder.JSONDecodeError(err_msg, exc.doc, exc.pos)
 
 
@@ -69,7 +69,7 @@ class Multicall:
                 outputs = self.make_batch_call(batch, block_id, gas_limit)
                 id_outputs.update({e["id"]: e for e in outputs})
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
+            with ThreadPoolExecutor(max_workers) as executor:
                 futures = []
                 for batch in self._partition_calls(calls, batch_size):
                     futures.append(
@@ -78,29 +78,35 @@ class Multicall:
                         )
                     )
 
-                for future in concurrent.futures.as_completed(futures):
+                for future in as_completed(futures):
                     id_outputs.update({e["id"]: e for e in future.result()})
 
         if as_dict:
             return {
-                call.request_id: call.decode(id_outputs[call.request_id], ignore_error)
-                for call in calls
+                c.request_id: c.decode(id_outputs[c.request_id], ignore_error)
+                for c in calls
             }
         else:
             return [
                 {
-                    "request_id": call.request_id,
-                    "result": call.decode(id_outputs[call.request_id], ignore_error),
+                    "request_id": c.request_id,
+                    "result": c.decode(id_outputs[c.request_id], ignore_error),
                 }
-                for call in calls
+                for c in calls
             ]
 
-    def make_batch_call(self, calls: List[Call], block_id, gas_limit) -> List[Dict]:
-        requests = [call(block_id=block_id, gas_limit=gas_limit) for call in calls]
+    def make_batch_call(
+        self,
+        calls: List[Call],
+        block_id: Optional[Union[str, int]] = None,
+        gas_limit: Optional[int] = None,
+    ) -> List[Dict]:
+        requests = [c(block_id=block_id, gas_limit=gas_limit) for c in calls]
         outputs = self.make_batch_request(requests)
         if len(outputs) != len(requests):
             raise ValueError(
-                f"multicall {len(requests)} requests, but got {len(outputs)} responses"
+                f"multicall has {len(requests)} requests, "
+                f"but got {len(outputs)} responses"
             )
         return outputs
 
@@ -109,7 +115,9 @@ class Multicall:
             return []
 
         self.logger.debug(
-            "Making request HTTP. URI: %s, Request: %s", self.provider_uri, requests
+            "Making request HTTP. URI: %s, Request: %s",
+            self.provider_uri,
+            requests,
         )
         raw_response = self.session.post(
             self.provider_uri,
