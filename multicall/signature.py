@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Tuple, List
 from functools import lru_cache
 from eth_abi.abi import encode, decode
 from eth_utils.abi import (
@@ -10,24 +10,47 @@ from eth_utils.hexadecimal import encode_hex, decode_hex
 
 
 @lru_cache(maxsize=4096)
-def parse_signature(signature: str):
+def parse_signature(signature: str) -> Tuple[str, List[str], List[str]]:
     """
-    Breaks 'func(address)(uint256)' into ['func', '(address)', '(uint256)']
+    Breaks 'func(address)(uint256)' into ['func', ['address'], ['uint256']]
     """
-    parts = []
-    stack = []
-    start = 0
-    for end, letter in enumerate(signature):
-        if letter == "(":
-            stack.append(letter)
+    parts: List[str] = []
+    stack: List[str] = []
+    start: int = 0
+    for end, character in enumerate(signature):
+        if character == "(":
+            stack.append(character)
             if not parts:
                 parts.append(signature[start:end])
                 start = end
-        if letter == ")":
+        if character == ")":
             stack.pop()
-            if not stack:
+            if not stack:  # we are only interested in outermost groups
                 parts.append(signature[start : end + 1])
                 start = end + 1
+    function = "".join(parts[:2])
+    input_types = parse_typestring(parts[1])
+    output_types = parse_typestring(parts[2])
+    return function, input_types, output_types
+
+
+def parse_typestring(typestring: str) -> List[str]:
+    if typestring == "()":
+        return []
+    parts = []
+    part = ""
+    inside_tuples = 0
+    for character in typestring[1:-1]:
+        if character == "(":
+            inside_tuples += 1
+        elif character == ")":
+            inside_tuples -= 1
+        elif character == "," and inside_tuples == 0:
+            parts.append(part)
+            part = ""
+            continue
+        part += character
+    parts.append(part)
     return parts
 
 
@@ -51,19 +74,19 @@ class Signature:
         if isinstance(signature, str):
             parts = parse_signature(signature.strip().replace(" ", ""))
 
+            function = parts[0]
             self.input_types = parts[1]
             self.output_types = parts[2]
-            function = "".join(parts[:2])
             self.fourbyte = function_signature_to_4byte_selector(function)
 
         elif isinstance(signature, dict):
             self.fourbyte = function_abi_to_4byte_selector(signature)
-            self.input_types = "({})".format(
-                ",".join(collapse_if_tuple(abi) for abi in signature.get("inputs", []))
-            )
-            self.output_types = "({})".format(
-                ",".join(collapse_if_tuple(abi) for abi in signature.get("outputs", []))
-            )
+            self.input_types = [
+                collapse_if_tuple(abi) for abi in signature.get("inputs", [])
+            ]
+            self.output_types = [
+                collapse_if_tuple(abi) for abi in signature.get("outputs", [])
+            ]
 
     def encode_data(self, args=None):
         data = self.fourbyte
@@ -83,4 +106,4 @@ class Signature:
                 msg = f"failed to decode data: {data} of signature: {self.signature}"
                 raise Exception(msg) from ex
 
-        return decoded if len(decoded) > 1 else decoded[0]
+        return decoded
