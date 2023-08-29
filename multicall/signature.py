@@ -1,9 +1,6 @@
 from typing import Union, Dict
 from functools import lru_cache
-from eth_abi.abi import (
-    encode_single,
-    decode_single,
-)
+from eth_abi.abi import encode, decode
 from eth_utils.abi import (
     function_signature_to_4byte_selector,
     function_abi_to_4byte_selector,
@@ -71,14 +68,14 @@ class Signature:
     def encode_data(self, args=None):
         data = self.fourbyte
         if args:
-            data += encode_single(self.input_types, args)
+            data += encode(self.input_types, args)
         return encode_hex(data)
 
     def decode_data(self, data: Union[str, bytes], ignore_error: bool = False):
         if isinstance(data, str):
             data = decode_hex(data)
         try:
-            decoded = decode_single(self.output_types, data)
+            decoded = decode(self.output_types, data)[0]
         except Exception as ex:
             if ignore_error is True:
                 return None

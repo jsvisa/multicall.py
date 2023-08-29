@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple
-from eth_abi.abi import decode_abi, decode_single
+from eth_abi.abi import decode
 from eth_utils.abi import collapse_if_tuple
 
 
@@ -79,14 +79,14 @@ def zip_if_tuple(abi: Dict, value) -> Dict:
 
 
 def eth_decode_input(func_abi: Dict, data) -> Tuple:
-    if "name" not in func_abi:
-        return None, None
+    if "name" not in func_abi or func_abi.get("type") != "function":
+        return (None, None)
 
     inputs = func_abi.get("inputs", [])
-    func_sign = "({})".format(",".join(collapse_if_tuple(i) for i in inputs))
-    func_text = "{}{}".format(func_abi["name"], func_sign)
+    func_sign = [collapse_if_tuple(i) for i in inputs]
+    func_text = "{}({})".format(func_abi["name"], ",".join(func_sign))
 
-    decoded = decode_single(func_sign, bytes(bytearray.fromhex(data[10:])))
+    decoded = decode(func_sign, bytes(bytearray.fromhex(data[10:])))
     parameter = {}
     for idx, value in enumerate(decoded):
         parameter.update(zip_if_tuple(inputs[idx], value))
@@ -106,9 +106,9 @@ def eth_decode_log(event_abi: Dict, topics: List[str], data):
                 indexed.append(collapse_if_tuple(input))
             else:
                 normal.append(collapse_if_tuple(input))
-    indexed_values = decode_abi(
+    indexed_values = decode(
         indexed, bytes(bytearray.fromhex("".join(e[2:] for e in topics[1:])))
     )
-    data_values = decode_abi(normal, bytes(bytearray.fromhex(data[2:])))
+    data_values = decode(normal, bytes(bytearray.fromhex(data[2:])))
 
     return indexed_values, data_values
