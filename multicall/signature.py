@@ -74,10 +74,10 @@ class Signature:
         if isinstance(signature, str):
             parts = parse_signature(signature.strip().replace(" ", ""))
 
-            function = parts[0]
+            self.function = parts[0]
             self.input_types = parts[1]
             self.output_types = parts[2]
-            self.fourbyte = function_signature_to_4byte_selector(function)
+            self.fourbyte = function_signature_to_4byte_selector(self.function)
 
         elif isinstance(signature, dict):
             self.fourbyte = function_abi_to_4byte_selector(signature)
@@ -87,6 +87,9 @@ class Signature:
             self.output_types = [
                 collapse_if_tuple(abi) for abi in signature.get("outputs", [])
             ]
+            self.function = "{}({})".format(
+                signature["name"], ",".join(self.input_types)
+            )
 
     def encode_data(self, args=None):
         data = self.fourbyte
