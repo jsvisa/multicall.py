@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
-eth-abi = "==2.1.1"
+eth-abi = ">=4.1.0"
 
 [dev-packages]
 pytest = "*"
