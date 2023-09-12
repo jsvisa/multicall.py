@@ -101,7 +101,7 @@ class Signature:
         if isinstance(data, str):
             data = decode_hex(data)
         try:
-            decoded = decode(self.output_types, data)[0]
+            decoded = decode(self.output_types, data)
         except Exception as ex:
             if ignore_error is True:
                 return None
@@ -109,4 +109,7 @@ class Signature:
                 msg = f"failed to decode data: {data} of signature: {self.signature}"
                 raise Exception(msg) from ex
 
-        return decoded
+        # decode returns a tuple,
+        # if there are only one return value,
+        # then we extract that value out
+        return decoded if len(decoded) > 1 else decoded[0]
