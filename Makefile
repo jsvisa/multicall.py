@@ -18,6 +18,6 @@ setup:  ## Run pipenv install to setup the environment
 	PIPENV_VENV_IN_PROJECT=1 pipenv run pre-commit install
 	PIPENV_VENV_IN_PROJECT=1 pipenv run pre-commit install-hooks
 
-publish: ## Package and upload into pypi
+publish: test test-all ## Package and upload into pypi
 	python setup.py sdist
 	twine upload dist/*
