@@ -62,7 +62,6 @@ class EtherService:
         ignore_error: bool = False,
         keep_zero_balance: bool = False,
     ) -> List[Dict[str, Any]]:
-
         if isinstance(tokens, str):
             tokens = [tokens]
         if isinstance(accounts, str):

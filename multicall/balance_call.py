@@ -26,8 +26,8 @@ class BalanceCall(Call):
 
     def decode(self, rpc_res: Dict, ignore_error: bool = False) -> Any:
         if "error" in rpc_res:
-            if self.ignore_error:
-                return rpc_res
+            if self.ignore_error is True:
+                return None
             else:
                 raise ValueError(rpc_res)
 
