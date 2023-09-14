@@ -21,3 +21,4 @@ setup:  ## Run pipenv install to setup the environment
 publish: test test-all ## Package and upload into pypi
 	python setup.py sdist
 	twine upload dist/*
+	rm -rf dist/*
