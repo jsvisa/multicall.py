@@ -36,7 +36,6 @@ class Multicall:
                 total=3,
                 backoff_factor=2,
                 status_forcelist=[429, 500, 502, 503, 504],
-                allowed_methods=["POST", "GET"],
                 respect_retry_after_header=False,
             )
             adapter = requests.adapters.HTTPAdapter(max_retries=retry)
