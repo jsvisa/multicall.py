@@ -131,3 +131,33 @@ def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple:
     data_values = decode(normal, bytes(bytearray.fromhex(data[2:])))
 
     return indexed_values, data_values
+
+
+def eth_decode_log_as_dict(abi: Dict, topics: List[str], data: str) -> Optional[Dict]:
+    indexed_values, data_values = eth_decode_log(abi, topics, data)
+    if None in (indexed_values, data_values):
+        return None
+
+    indexed_names, data_names = [], []
+    byte_names = []
+    if "inputs" in abi:
+        for _in in abi.get("inputs", []):
+            name = _in["name"]
+            if _in.get("indexed") is True:
+                indexed_names.append(name)
+            else:
+                data_names.append(name)
+            if _in["type"].startswith("byte"):
+                byte_names.append(name)
+
+    parameter = dict(
+        chain(zip(indexed_names, indexed_values), zip(data_names, data_values))
+    )
+    for key in byte_names:
+        val = parameter[key]
+        if isinstance(val, tuple):
+            parameter[key] = tuple([e.hex() for e in val])
+        elif isinstance(val, bytes):
+            parameter[key] = val.hex()
+
+    return parameter
