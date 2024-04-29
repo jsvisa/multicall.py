@@ -1,14 +1,28 @@
-from typing import List, Dict, Tuple
+from itertools import chain
+from typing import List, Dict, Tuple, Optional, Any
 from eth_abi.abi import decode
 from eth_utils.abi import collapse_if_tuple
 
 
-def collapse_if_tuple_with_name(abi: Dict) -> str:
+def collapse_if_tuple_with_name(abi: Dict[str, Any], is_event=False) -> str:
     """
     Converts a tuple from a dict to a parenthesized list of its types.
     Copy from eth_utils.abi
 
+    >>> from eth_utils.abi import collapse_if_tuple
     >>> collapse_if_tuple(
+    ...     {
+    ...         'components': [
+    ...             {'name': 'anAddress', 'type': 'address'},
+    ...             {'name': 'anInt', 'type': 'uint256'},
+    ...             {'name': 'someBytes', 'type': 'bytes'},
+    ...         ],
+    ...         'type': 'tuple',
+    ...     }
+    ... )
+    '(address,uint256,bytes)'
+
+    >>> collapse_if_tuple_with_name(
     ...     {
     ...         'components': [
     ...             {'name': 'anAddress', 'type': 'address'},
@@ -21,19 +35,24 @@ def collapse_if_tuple_with_name(abi: Dict) -> str:
     '(address anAddress, uint256 anInt, bytes someBytes)'
     """
     typ = abi["type"]
-    nam = abi.get("name", "?__?")
     if not isinstance(typ, str):
         raise TypeError(
-            f"The 'type' must be a string, but got {type} of type {type(typ)}"
+            "The 'type' must be a string, but got %r of type %s" % (typ, type(typ))
         )
     elif not typ.startswith("tuple"):
-        return f"{typ} {nam}"
+        return "{indexed}{typ} {name}".format(
+            indexed="index " if is_event is True and abi.get("indexed") is True else "",
+            typ=typ,
+            name=abi.get("name", ""),
+        )
 
-    delimited = ", ".join(collapse_if_tuple(c) for c in abi["components"])
+    delimited = ", ".join(collapse_if_tuple_with_name(c) for c in abi["components"])
     # Whatever comes after "tuple" is the array dims.  The ABI spec states that
     # this will have the form "", "[]", or "[k]".
     array_dim = typ[5:]
-    collapsed = "({}){} ".format(delimited, array_dim)
+    collapsed = "({delimited}){array_dim}{name}".format(
+        delimited=delimited, array_dim=array_dim, name=abi.get("name", "")
+    )
 
     return collapsed
 
@@ -94,7 +113,7 @@ def eth_decode_input(func_abi: Dict, data) -> Tuple:
     return func_text, parameter
 
 
-def eth_decode_log(event_abi: Dict, topics: List[str], data):
+def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple:
     if "name" not in event_abi or event_abi.get("type") != "event":
         return (None, None)
 
