@@ -20,10 +20,6 @@ class BalanceCall(Call):
         self.ignore_error = ignore_error
         self.gas_limit = gas_limit
 
-    @property
-    def calldata(self):
-        return self.signature.encode_data(self.args)
-
     def decode(self, rpc_res: Dict, ignore_error: bool = False) -> Any:
         if "error" in rpc_res:
             if self.ignore_error is True:
