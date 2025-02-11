@@ -57,23 +57,32 @@ def collapse_if_tuple_with_name(abi: Dict[str, Any], is_event=False) -> str:
     return collapsed
 
 
+def convert_bytes_array(val):
+    if isinstance(val, (list, tuple)):
+        return [convert_bytes_array(v) for v in val]
+    # base case: single bytes value
+    if isinstance(val, bytes):
+        return val.hex()
+    return val
+
+
 def zip_if_tuple(abi: Dict, value) -> Dict:
     typ = abi["type"]
     name = abi["name"]
     if typ.startswith("byte"):
-        # list
+        # handle multiple dimensional byte arrays
         if typ.endswith("]"):
-            values = [v.hex() for v in value]
-            result = []
-            for vs in values:
-                vss = [vs[n : n + 64] for n in range(0, len(vs), 64)]  # noqa
-                # the last element's suffix maybe not complete
-                # see https://etherscan.io/tx/0xc4bdb99faa13446888db5a66c8e9f42606f0ccd7ec7a2d733012a867a34be0ec # noqa
-                if len(vss[-1]) < 64:
-                    # suffix with zero
-                    vss[-1] = vss[-1] + "0" * (64 - len(vss[-1]))
-                result.extend(vss)
-            return {name: result}
+            values = convert_bytes_array(value)
+            # only process the hex string splitting for single dimensional array
+            if typ.count("[") == 1:
+                result = []
+                for vs in values:
+                    vss = [vs[n : n + 64] for n in range(0, len(vs), 64)]  # noqa
+                    if len(vss[-1]) < 64:
+                        vss[-1] = vss[-1] + "0" * (64 - len(vss[-1]))
+                    result.extend(vss)
+                return {name: result}
+            return {name: values}
         else:
             return {name: value.hex()}
     if not typ.startswith("tuple"):
