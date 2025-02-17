@@ -7,16 +7,12 @@ class TestErc20:
     token_address = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
     owner = "0x65b654b8ebe64ed62b05ea3cbdd3d20f6ca33880"
     block_id = 13450206
+    balance = 6266076220000000000
     erc20_service = Erc20Service()
     mc = Multicall(os.environ["ETHEREUM_PROVIDER_URI"])
 
     def test_get_balance(self):
-        excepted = [
-            {
-                "request_id": self.token_address,
-                "result": 6266076220000000000,
-            }
-        ]
+        excepted = [{"request_id": self.token_address, "result": self.balance}]
 
         call = self.erc20_service.balanceOf(
             token=self.token_address,
@@ -26,3 +22,13 @@ class TestErc20:
         )
         result = self.mc.agg([call])
         assert result == excepted
+
+    def test_sin_call(self):
+        call = self.erc20_service.balanceOf(
+            token=self.token_address,
+            owner=self.owner,
+            request_id=self.token_address,
+            block_id=self.block_id,
+        )
+        result = self.mc.sin(call)
+        assert result == self.balance
