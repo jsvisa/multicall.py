@@ -94,6 +94,15 @@ class Multicall:
                 for c in calls
             ]
 
+    def sin(
+        self,
+        call: Call,
+        block_id: Optional[Union[str, int]] = None,
+        gas_limit: Optional[int] = None,
+    ) -> Any:
+        result = self.make_batch_call([call], block_id, gas_limit)[0]
+        return call.decode(result)
+
     def make_batch_call(
         self,
         calls: List[Call],
