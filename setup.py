@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 setup(
     name="multicall-py",
-    version="1.3.5",
+    version="1.3.6",
     description="Ethereum multiple contract/rpc calls",
     long_description=open(os.path.join(here, "README.md")).read(),
     long_description_content_type="text/markdown",
