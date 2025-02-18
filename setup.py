@@ -5,8 +5,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 setup(
-    name="multicall-py",
-    version="1.3.6",
+    name="multicall_py",
+    version="1.3.8",
     description="Ethereum multiple contract/rpc calls",
     long_description=open(os.path.join(here, "README.md")).read(),
     long_description_content_type="text/markdown",
@@ -30,7 +30,7 @@ setup(
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
     keywords="ethereum jsonrpc contract multicall",
-    author="Wenbiao Zheng",
+    author="jsvisa",
     author_email="delweng@gmail.com",
     url="https://github.com/jsvisa/multicall.py",
     license="MIT",
