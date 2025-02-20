@@ -57,6 +57,19 @@ def collapse_if_tuple_with_name(abi: Dict[str, Any], is_event=False) -> str:
     return collapsed
 
 
+def abi_to_signature_with_arguments(abi: Dict[str, Any]) -> str:
+    function_signature = "{fn_name}({fn_input_types})".format(
+        fn_name=abi["name"],
+        fn_input_types=", ".join(
+            [
+                collapse_if_tuple_with_name(abi_input)
+                for abi_input in abi.get("inputs", [])
+            ]
+        ),
+    )
+    return function_signature
+
+
 def convert_bytes_array(val):
     if isinstance(val, (list, tuple)):
         return [convert_bytes_array(v) for v in val]

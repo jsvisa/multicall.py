@@ -1,8 +1,9 @@
-from multicall.eth_decode import eth_decode_input
+from multicall.eth_decode import eth_decode_input, abi_to_signature_with_arguments
 from tests.testdata import (
     ABI_swapETHForSpecificNFTs,
     ABI_matchAdvancedOrders,
     ABI_claim,
+    ABI_swapExactTokenForPt,
 )
 
 
@@ -182,3 +183,27 @@ class TestEthDecode:
             ],
             "recipient": "0x1f818fef67fd1de70ed02f434f83455e3c754ecb",
         }
+
+    def test_abi_to_signature_with_arguments(self):
+        abies = [
+            (
+                ABI_swapETHForSpecificNFTs,
+                "swapETHForSpecificNFTs((address pair, uint256[] nftIds)[]swapList, address ethRecipient, address nftRecipient, uint256 deadline)",
+            ),
+            (
+                ABI_matchAdvancedOrders,
+                "matchAdvancedOrders(((address offerer, address zone, (uint8 itemType, address token, uint256 identifierOrCriteria, uint256 startAmount, uint256 endAmount)[]offer, (uint8 itemType, address token, uint256 identifierOrCriteria, uint256 startAmount, uint256 endAmount, address recipient)[]consideration, uint8 orderType, uint256 startTime, uint256 endTime, bytes32 zoneHash, uint256 salt, bytes32 conduitKey, uint256 totalOriginalConsiderationItems)parameters, uint120 numerator, uint120 denominator, bytes signature, bytes extraData)[]orders, (uint256 orderIndex, uint8 side, uint256 index, uint256 identifier, bytes32[] criteriaProof)[]criteriaResolvers, ((uint256 orderIndex, uint256 itemIndex)[]offerComponents, (uint256 orderIndex, uint256 itemIndex)[]considerationComponents)[]fulfillments, address recipient)",
+            ),
+            (
+                ABI_claim,
+                "claim(address[] users, address[] tokens, uint256[] amounts, bytes32[][] proofs)",
+            ),
+            (
+                ABI_swapExactTokenForPt,
+                "swapExactTokenForPt(address receiver, address market, uint256 minPtOut, (uint256 guessMin, uint256 guessMax, uint256 guessOffchain, uint256 maxIteration, uint256 eps)guessPtOut, (address tokenIn, uint256 netTokenIn, address tokenMintSy, address pendleSwap, (uint8 swapType, address extRouter, bytes extCalldata, bool needScale)swapData)input, (address limitRouter, uint256 epsSkipMarket, ((uint256 salt, uint256 expiry, uint256 nonce, uint8 orderType, address token, address YT, address maker, address receiver, uint256 makingAmount, uint256 lnImpliedRate, uint256 failSafeRate, bytes permit)order, bytes signature, uint256 makingAmount)[]normalFills, ((uint256 salt, uint256 expiry, uint256 nonce, uint8 orderType, address token, address YT, address maker, address receiver, uint256 makingAmount, uint256 lnImpliedRate, uint256 failSafeRate, bytes permit)order, bytes signature, uint256 makingAmount)[]flashFills, bytes optData))",
+            ),
+        ]
+
+        for abi, want in abies:
+            have = abi_to_signature_with_arguments(abi)
+            assert have == want, have
