@@ -86,15 +86,6 @@ def zip_if_tuple(abi: Dict, value) -> Dict:
         # handle multiple dimensional byte arrays
         if typ.endswith("]"):
             values = convert_bytes_array(value)
-            # only process the hex string splitting for single dimensional array
-            if typ.count("[") == 1:
-                result = []
-                for vs in values:
-                    vss = [vs[n : n + 64] for n in range(0, len(vs), 64)]  # noqa
-                    if len(vss[-1]) < 64:
-                        vss[-1] = vss[-1] + "0" * (64 - len(vss[-1]))
-                    result.extend(vss)
-                return {name: result}
             return {name: values}
         else:
             return {name: value.hex()}
