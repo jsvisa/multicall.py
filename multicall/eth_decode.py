@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple, Optional, Any, Union
 from eth_abi.abi import decode
 from eth_utils.abi import collapse_if_tuple
 
@@ -92,22 +92,19 @@ def zip_if_tuple(abi: Dict, value) -> Dict:
     if not typ.startswith("tuple"):
         return {name: value}
 
-    is_array = len(typ) > len("tuple")
-
+    n_dims = (len(typ) - len("tuple")) // 2
     subabi = abi["components"]
-    if not is_array:
+    return {name: extract_sub_values(subabi, value, n_dims)}
+
+
+def extract_sub_values(abi: List[Dict], value: Any, n_dims: int) -> Union[List, Dict]:
+    if n_dims == 0:
         subvalue = {}
-        for idx, sa in enumerate(subabi):
+        for idx, sa in enumerate(abi):
             subvalue.update(zip_if_tuple(sa, value[idx]))
-        return {name: subvalue}
-    else:
-        subvalues = []
-        for sv in value:
-            subvalue = {}
-            for idx, sa in enumerate(subabi):
-                subvalue.update(zip_if_tuple(sa, sv[idx]))
-            subvalues.append(subvalue)
-        return {name: subvalues}
+        return subvalue
+
+    return [extract_sub_values(abi, sub, n_dims - 1) for sub in value]
 
 
 def eth_decode_input(func_abi: Dict, data) -> Tuple:
