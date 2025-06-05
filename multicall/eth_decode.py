@@ -92,6 +92,33 @@ def zip_if_tuple(abi: Dict, value) -> Dict:
     if not typ.startswith("tuple"):
         return {name: value}
 
+    # we need to extract the sub-values from a tuple array:
+    # tuple[] -> 1 tuple[][] -> 2 tuple[][][] -> 3
+    # the ABI for those tuple arraies are still the compated one:
+    # eg:
+    # {
+    #     "name": "doHardWork",
+    #     "type": "function",
+    #     "inputs": [
+    #         {
+    #             "name": "dhwParams",
+    #             "type": "tuple",
+    #             "components": [
+    #                 {
+    #                     "name": "swapInfo",
+    #                     "type": "tuple[][][]",
+    #                     "components": [
+    #                         {"name": "swapTarget", "type": "address"},
+    #                         {"name": "token", "type": "address"},
+    #                         {"name": "swapCallData", "type": "bytes"},
+    #                     ],
+    #                     "internalType": "struct SwapInfo[][][]",
+    #                 }
+    #             ],
+    #         }
+    #     ],
+    # }
+    # so we need to iterate the input data to extract the sub-values
     n_dims = (len(typ) - len("tuple")) // 2
     subabi = abi["components"]
     return {name: extract_sub_values(subabi, value, n_dims)}
