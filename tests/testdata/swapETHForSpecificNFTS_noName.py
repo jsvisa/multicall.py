@@ -1,16 +1,16 @@
-ABI_swapETHForSpecificNFTs = {
+ABI_swapETHForSpecificNFTs_noName = {
     "inputs": [
         {
             "components": [
-                {"name": "pair", "type": "address"},
-                {"name": "nftIds", "type": "uint256[]"},
+                {"name": "", "type": "address"},
+                {"name": "", "type": "uint256[]"},
             ],
             "name": "swapList",
             "type": "tuple[]",
         },
-        {"name": "ethRecipient", "type": "address"},
+        {"name": "", "type": "address"},
         {"name": "nftRecipient", "type": "address"},
-        {"name": "deadline", "type": "uint256"},
+        {"name": "", "type": "uint256"},
     ],
     "name": "swapETHForSpecificNFTs",
     "outputs": [{"name": "remainingValue", "type": "uint256"}],

@@ -79,9 +79,11 @@ def convert_bytes_array(val):
     return val
 
 
-def zip_if_tuple(abi: Dict, value) -> Dict:
+def zip_if_tuple(abi: Dict, value, idx: int) -> Dict:
     typ = abi["type"]
     name = abi["name"]
+    if name == "":
+        name = "__arg{}".format(idx)
     if typ.startswith("byte"):
         # handle multiple dimensional byte arrays
         if typ.endswith("]"):
@@ -128,7 +130,7 @@ def extract_sub_values(abi: List[Dict], value: Any, n_dims: int) -> Union[List, 
     if n_dims == 0:
         subvalue = {}
         for idx, sa in enumerate(abi):
-            subvalue.update(zip_if_tuple(sa, value[idx]))
+            subvalue.update(zip_if_tuple(sa, value[idx], idx))
         return subvalue
 
     return [extract_sub_values(abi, sub, n_dims - 1) for sub in value]
@@ -145,7 +147,7 @@ def eth_decode_input(func_abi: Dict, data) -> Tuple:
     decoded = decode(func_sign, bytes(bytearray.fromhex(data[10:])))
     parameter = {}
     for idx, value in enumerate(decoded):
-        parameter.update(zip_if_tuple(inputs[idx], value))
+        parameter.update(zip_if_tuple(inputs[idx], value, idx))
 
     return func_text, parameter
 

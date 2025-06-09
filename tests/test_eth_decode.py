@@ -1,6 +1,7 @@
 from multicall.eth_decode import eth_decode_input, abi_to_signature_with_arguments
 from tests.testdata import (
     ABI_swapETHForSpecificNFTs,
+    ABI_swapETHForSpecificNFTs_noName,
     ABI_matchAdvancedOrders,
     ABI_claim,
     ABI_execute,
@@ -27,6 +28,25 @@ class TestEthDecode:
             "ethRecipient": "0xca6f3defbc6041299837725f6430f33b0f24e5c0",
             "nftRecipient": "0xca6f3defbc6041299837725f6430f33b0f24e5c0",
             "deadline": 1659488792,
+        }
+
+    def test_eth_decode_input_noName(self):
+        abi = ABI_swapETHForSpecificNFTs_noName
+
+        data = "0x111320000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000ca6f3defbc6041299837725f6430f33b0f24e5c0000000000000000000000000ca6f3defbc6041299837725f6430f33b0f24e5c00000000000000000000000000000000000000000000000000000000062e9ca1800000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000575570f62c90a61763b1e93cf0da62ed810dbda2000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000561"  # noqa
+        func_text, parameter = eth_decode_input(abi, data)
+        WANT = "swapETHForSpecificNFTs((address,uint256[])[],address,address,uint256)"  # noqa
+        assert func_text == WANT
+        assert parameter == {
+            "swapList": [
+                {
+                    "__arg0": "0x575570f62c90a61763b1e93cf0da62ed810dbda2",
+                    "__arg1": (1377,),
+                }
+            ],
+            "__arg1": "0xca6f3defbc6041299837725f6430f33b0f24e5c0",
+            "nftRecipient": "0xca6f3defbc6041299837725f6430f33b0f24e5c0",
+            "__arg3": 1659488792,
         }
 
     def test_eth_decode_input_execute(self):
