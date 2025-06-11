@@ -5,6 +5,7 @@ from .claim import ABI_claim
 from .execute import ABI_execute
 from .swapExactTokenForPt import ABI_swapExactTokenForPt
 from .smartSwapByOrderId import ABI_smartSwapByOrderId
+from .updateDepositTree import ABI_updateDepositTree
 
 __all__ = [
     "ABI_swapETHForSpecificNFTs",
@@ -14,4 +15,5 @@ __all__ = [
     "ABI_execute",
     "ABI_swapExactTokenForPt",
     "ABI_smartSwapByOrderId",
+    "ABI_updateDepositTree",
 ]
