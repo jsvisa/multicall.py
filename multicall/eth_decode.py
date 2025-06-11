@@ -87,10 +87,10 @@ def zip_if_tuple(abi: Dict, value, idx: int) -> Dict:
     if typ.startswith("byte"):
         # handle multiple dimensional byte arrays
         if typ.endswith("]"):
-            values = convert_bytes_array(value)
-            return {name: values}
+            value = convert_bytes_array(value)
         else:
-            return {name: value.hex()}
+            value = value.hex()
+        return {name: value}
     if not typ.startswith("tuple"):
         return {name: value}
 
@@ -121,7 +121,7 @@ def zip_if_tuple(abi: Dict, value, idx: int) -> Dict:
     #     ],
     # }
     # so we need to iterate the input data to extract the sub-values
-    n_dims = (len(typ) - len("tuple")) // 2
+    n_dims = typ.count("[")
     subabi = abi["components"]
     return {name: extract_sub_values(subabi, value, n_dims)}
 
