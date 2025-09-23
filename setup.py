@@ -38,7 +38,7 @@ setup(
     include_package_data=True,
     python_requires=">=3.6",
     install_requires=[
-        "eth-abi>=4.1.0",
+        "eth-abi>=5.2.0",
         "requests",
     ],
 )
