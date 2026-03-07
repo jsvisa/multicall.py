@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests.adapters
 from urllib3.util.retry import Retry
@@ -118,31 +119,72 @@ class Multicall:
             )
         return outputs
 
+    # JSON-RPC error codes treated as rate-limiting
+    _RATE_LIMIT_CODES = {429, -32005}
+    _BODY_RETRIES = 3
+    _BODY_BACKOFF_FACTOR = 1.5
+
     def make_batch_request(self, requests: List[Dict]) -> List[Dict]:
         if len(requests) == 0:
             return []
 
-        self.logger.debug(
-            "Making request HTTP. URI: %s, Request: %s",
-            self.provider_uri,
-            requests,
-        )
-        raw_response = self.session.post(
-            self.provider_uri,
-            json=requests if len(requests) > 1 else requests[0],
-        )
-        self.logger.debug(
-            "Getting response HTTP. URI: %s, " "Request: %s, Response: %s",
-            self.provider_uri,
-            requests,
-            raw_response,
-        )
-        text_response = to_text(text=raw_response.text)
-        responses = json_decode(text_response)
+        payload = requests if len(requests) > 1 else requests[0]
+        responses = None
+
+        for attempt in range(1 + self._BODY_RETRIES):
+            self.logger.debug(
+                "Making request HTTP. URI: %s, Request: %s",
+                self.provider_uri,
+                requests,
+            )
+            raw_response = self.session.post(
+                self.provider_uri,
+                json=payload,
+            )
+            self.logger.debug(
+                "Getting response HTTP. URI: %s, " "Request: %s, Response: %s",
+                self.provider_uri,
+                requests,
+                raw_response,
+            )
+            text_response = to_text(text=raw_response.text)
+            responses = json_decode(text_response)
+
+            if not self._is_rate_limited(responses) or attempt == self._BODY_RETRIES:
+                break
+
+            sleep_time = self._BODY_BACKOFF_FACTOR * (2**attempt)
+            self.logger.warning(
+                "JSON-RPC rate limit from %s, retry %d/%d after %.1fs",
+                self.provider_uri,
+                attempt + 1,
+                self._BODY_RETRIES,
+                sleep_time,
+            )
+            time.sleep(sleep_time)
+
         if len(requests) > 1:
             return responses  # type: ignore
         else:
-            return [responses]
+            return [responses]  # type: ignore
+
+    def _is_rate_limited(self, data) -> bool:
+        """Check if a parsed JSON-RPC response signals rate-limiting."""
+
+        def error_is_limited(error) -> bool:
+            return (
+                isinstance(error, dict) and error.get("code") in self._RATE_LIMIT_CODES
+            )
+
+        if isinstance(data, dict):
+            return error_is_limited(data.get("error"))
+
+        if isinstance(data, list):
+            return any(
+                isinstance(item, dict) and error_is_limited(item.get("error"))
+                for item in data
+            )
+        return False
 
     def _partition_calls(
         self, calls: Iterable, batch_size: int
