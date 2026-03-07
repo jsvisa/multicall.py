@@ -166,20 +166,22 @@ class Multicall:
         if len(requests) > 1:
             return responses  # type: ignore
         else:
-            return [responses]
+            return [responses]  # type: ignore
 
     def _is_rate_limited(self, data) -> bool:
         """Check if a parsed JSON-RPC response signals rate-limiting."""
-        if isinstance(data, dict):
-            error = data.get("error")
+
+        def error_is_limited(error) -> bool:
             return (
                 isinstance(error, dict) and error.get("code") in self._RATE_LIMIT_CODES
             )
+
+        if isinstance(data, dict):
+            return error_is_limited(data.get("error"))
+
         if isinstance(data, list):
             return any(
-                isinstance(item, dict)
-                and isinstance(item.get("error"), dict)
-                and item["error"].get("code") in self._RATE_LIMIT_CODES
+                isinstance(item, dict) and error_is_limited(item.get("error"))
                 for item in data
             )
         return False
