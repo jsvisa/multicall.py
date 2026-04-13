@@ -166,6 +166,12 @@ class Multicall:
         if len(requests) > 1:
             return responses  # type: ignore
         else:
+            # Some RPC nodes return error responses without an "id" field
+            # (e.g. rate-limit errors on single non-batch requests).
+            # Inject the request id so agg() can index by it and c.decode()
+            # can surface the error rather than raising KeyError: 'id'.
+            if isinstance(responses, dict) and "id" not in responses:
+                responses["id"] = requests[0].get("id")
             return [responses]  # type: ignore
 
     def _is_rate_limited(self, data) -> bool:
