@@ -148,11 +148,11 @@ class Multicall:
         block_id: Optional[Union[str, int]] = None,
         gas_limit: Optional[int] = None,
     ) -> List[Dict]:
-        requests = [c(block_id=block_id, gas_limit=gas_limit) for c in calls]
-        outputs = self.make_batch_request(requests)
-        if len(outputs) != len(requests):
+        rpc_calls = [c(block_id=block_id, gas_limit=gas_limit) for c in calls]
+        outputs = self.make_batch_request(rpc_calls)
+        if len(outputs) != len(rpc_calls):
             raise ValueError(
-                f"multicall has {len(requests)} requests, "
+                f"multicall has {len(rpc_calls)} requests, "
                 f"but got {len(outputs)} responses"
             )
         return outputs
