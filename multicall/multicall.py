@@ -47,16 +47,14 @@ class Multicall:
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
 
-    def agg(
+    def agg_raw(
         self,
         calls: Sequence[Call],
-        as_dict: bool = False,
-        ignore_error: bool = False,
         block_id: Optional[Union[str, int]] = None,
         gas_limit: Optional[int] = None,
         batch_size: int = 100,
         max_workers: int = 1,
-    ) -> Union[Dict, List[Dict]]:
+    ) -> Dict:
         assert max_workers > 0, "max_workers must be not negative"
 
         request_ids = set(call.request_id for call in calls)
@@ -80,20 +78,60 @@ class Multicall:
 
                 for future in as_completed(futures):
                     id_outputs.update({e["id"]: e for e in future.result()})
+        return id_outputs
 
+    def agg(
+        self,
+        calls: Sequence[Call],
+        as_dict: bool = False,
+        ignore_error: bool = False,
+        block_id: Optional[Union[str, int]] = None,
+        gas_limit: Optional[int] = None,
+        batch_size: int = 100,
+        max_workers: int = 1,
+    ) -> Union[Dict, List[Dict]]:
         if as_dict:
-            return {
-                c.request_id: c.decode(id_outputs[c.request_id], ignore_error)
-                for c in calls
-            }
+            return self.agg_as_dict(
+                calls, ignore_error, block_id, gas_limit, batch_size, max_workers
+            )
         else:
-            return [
-                {
-                    "request_id": c.request_id,
-                    "result": c.decode(id_outputs[c.request_id], ignore_error),
-                }
-                for c in calls
-            ]
+            return self.agg_as_list(
+                calls, ignore_error, block_id, gas_limit, batch_size, max_workers
+            )
+
+    def agg_as_dict(
+        self,
+        calls: Sequence[Call],
+        ignore_error: bool = False,
+        block_id: Optional[Union[str, int]] = None,
+        gas_limit: Optional[int] = None,
+        batch_size: int = 100,
+        max_workers: int = 1,
+    ) -> Dict:
+        id_outputs = self.agg_raw(calls, block_id, gas_limit, batch_size, max_workers)
+        return {
+            c.request_id: c.decode(id_outputs[c.request_id], ignore_error)
+            for c in calls
+        }
+
+    def agg_as_list(
+        self,
+        calls: Sequence[Call],
+        ignore_error: bool = False,
+        block_id: Optional[Union[str, int]] = None,
+        gas_limit: Optional[int] = None,
+        batch_size: int = 100,
+        max_workers: int = 1,
+    ) -> List[Dict]:
+        id_outputs = self.agg_raw(calls, block_id, gas_limit, batch_size, max_workers)
+
+        return [
+            {
+                "request_id": c.request_id,
+                "result": c.decode(id_outputs[c.request_id], ignore_error),
+            }
+            for c in calls
+        ]
 
     def sin(
         self,
