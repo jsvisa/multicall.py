@@ -292,6 +292,7 @@ class TestEthDecode:
         eth_decode_input(abi, data)
 
     @pytest.mark.xfail(reason="truncated padding not yet supported with eth-abi>=5")
+    # waiting for https://github.com/ApeWorX/eth-abi/pull/247 to be merged
     def test_eth_decode_truncated_padding(self):
         # fix the decode issue with truncated padding
         # https://etherscan.io/tx/0xc0d6f3899012f15ec11bde6128ad01998bd6387adea8134340fdd604b6ff67a3
