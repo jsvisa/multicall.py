@@ -1,7 +1,15 @@
 from itertools import chain
 from typing import List, Dict, Tuple, Optional, Any, Union
-from eth_abi.abi import decode
+from eth_abi.abi import decode as _decode
+from eth_abi.exceptions import InsufficientDataBytes
 from eth_utils.abi import collapse_if_tuple
+
+
+def decode(types: List[str], data: bytes) -> Tuple:
+    try:
+        return _decode(types, data)
+    except InsufficientDataBytes:
+        return _decode(types, data, strict=False)
 
 
 def collapse_if_tuple_with_name(abi: Dict[str, Any], is_event=False) -> str:
