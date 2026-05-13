@@ -75,7 +75,7 @@ def convert_bytes_array(val):
         return [convert_bytes_array(v) for v in val]
     # base case: single bytes value
     if isinstance(val, bytes):
-        return val.hex()
+        return '0x' + val.hex()
     return val
 
 
@@ -89,7 +89,7 @@ def zip_if_tuple(abi: Dict, value, idx: int) -> Dict:
         if typ.endswith("]"):
             value = convert_bytes_array(value)
         else:
-            value = value.hex()
+            value = '0x' + value.hex()
         return {name: value}
     if not typ.startswith("tuple"):
         return {name: value}
@@ -195,8 +195,8 @@ def eth_decode_log_as_dict(abi: Dict, topics: List[str], data: str) -> Optional[
     for key in byte_names:
         val = parameter[key]
         if isinstance(val, tuple):
-            parameter[key] = tuple([e.hex() for e in val])
+            parameter[key] = tuple(['0x' + e.hex() for e in val])
         elif isinstance(val, bytes):
-            parameter[key] = val.hex()
+            parameter[key] = '0x' + val.hex()
 
     return parameter
