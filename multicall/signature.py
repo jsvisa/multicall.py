@@ -80,8 +80,7 @@ class Signature:
             self.fourbyte = function_signature_to_4byte_selector(self.function)
 
         elif isinstance(signature, dict):
-            abi = signature if "type" in signature else {**signature, "type": "function"}
-            self.fourbyte = function_abi_to_4byte_selector(abi)
+            self.fourbyte = function_abi_to_4byte_selector(signature)
             self.input_types = [
                 collapse_if_tuple(abi) for abi in signature.get("inputs", [])
             ]
