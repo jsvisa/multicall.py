@@ -42,4 +42,11 @@ setup(
         "eth-hash[pycryptodome]",
         "requests",
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "black",
+            "pre-commit",
+        ],
+    },
 )
