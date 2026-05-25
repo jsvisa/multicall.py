@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 from eth_utils.conversions import to_text
 
+from . import __version__
 from .call import Call
 
 
@@ -30,6 +31,7 @@ class Multicall:
         provider_uri: str,
         logger: Optional[logging.Logger] = None,
         session: Optional[Session] = None,
+        headers: Optional[Dict[str, str]] = None,
     ):
         self.provider_uri = provider_uri
         if session is None:
@@ -43,6 +45,9 @@ class Multicall:
             session = Session()
             session.mount("http://", adapter)
             session.mount("https://", adapter)
+            session.headers.update({"User-Agent": f"multicall/{__version__}"})
+        if headers:
+            session.headers.update(headers)
 
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
